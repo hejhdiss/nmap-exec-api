@@ -72,6 +72,25 @@ Key features:
 - ❌ The author is not responsible for misuse
 - 🎓 Designed for development, automation, and research purposes
 
+## Production-Grade Upgrades (Optional)
+
+This project is a **lightweight boilerplate** designed to minimize dependencies and infrastructure requirements by default.  
+It focuses on providing a clean, auditable foundation rather than a fully production-hardened service.
+
+| Area | Default | Production Recommendation |
+|----|----|----|
+| Authentication | ❌ None | API keys / JWT / OAuth2 |
+| Authorization | ❌ None | Role-based access control |
+| Target validation | ❌ None | Asset allowlists / CIDR checks |
+| Rate limiting | ❌ None | Per-user / per-IP limits |
+| Job queue | In-memory asyncio | Redis + Celery (optional) |
+| Job persistence | ❌ None | Redis / DB / file-backed store |
+| Logging | Minimal | Structured logs / audit trails |
+| Monitoring | ❌ None | Metrics & health monitoring |
+
+> Advanced production features are intentionally excluded to **reduce dependencies**, avoid boilerplate complexity, and allow integrators to add only what their environment requires.
+
+
 ### 🔒 Important Security Considerations
 
 **This API does NOT provide complete security validation.** It is designed as a foundation for developers to build upon.
