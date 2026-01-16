@@ -139,12 +139,14 @@ export function NmapScanner() {
     if (!target.trim()) {
       return "Please enter a target IP or hostname";
     }
-    
+    const scanningOptionsCount = selectedOptions.length ;
+    if (scanningOptionsCount === 0) {
+    return "Please select at least one scan option (e.g., Service Version or OS Detection).";
+  }
     // Check if any option that needs input is missing value
     for (const opt of selectedOptions) {
-      if (!opt.value) {
-        // This option requires input - check the config
-        // For simplicity, we'll allow empty values and let backend validate
+      if (!opt.value || opt.value.trim().length === 0) {
+      return `One of your selected options requires an input value. Please enter at least one character.`;
       }
     }
     
@@ -324,7 +326,7 @@ export function NmapScanner() {
               size="lg"
               onClick={handleRunScan}
               loading={isLoading}
-              disabled={!target.trim()}
+              disabled={!target.trim() || selectedOptions.length === 0}
             >
               {isLoading ? "Scanning..." : `🚀 Run Scan${totalSelectedOptions > 0 ? ` (${totalSelectedOptions} options)` : ""}`}
             </Button>
