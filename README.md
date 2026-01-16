@@ -41,17 +41,20 @@ This repository contains two implementations:
 
 Key features:
 - 🔒 **Safe file handling** with automatic path sanitization
-- 📁 **Automatic directory management** (`nmap_scans/` folder)
+- 📂 **Automatic directory management** (`nmap_scans/` folder)
 - 🗂️ **Auto-generated XML output** for all scans (for parsing)
 - 📊 **Built-in XML parser** (`/file` endpoint with structured JSON output)
 - 🔐 **Path traversal protection** (files restricted to `nmap_scans/` directory)
 - 🎯 **Unique filenames** using UUID to prevent conflicts
+- 🪟 **Windows-compatible** using Hypercorn (solves uvicorn SelectorEventLoop issues)
+- 📝 **Output mode tracking** included in scan responses
 
 **Use this when:**
 - Testing locally with Postman/curl on 127.0.0.1
 - Quick prototyping and experimentation on your own device
 - Non-developers need a ready-to-use tool for local testing
 - Want immediate functionality without modifications
+- **Running on Windows** where uvicorn's SelectorEventLoop causes problems
 
 ## ⚠️ Disclaimer & Security Notice
 
@@ -102,7 +105,7 @@ This API provides the building blocks - **you must add the security layer** appr
 - 🚀 **REST API interface** for Nmap execution
 - 🧱 **Structured option system** (ID-based, no raw commands)
 - ⚡ **Dual execution modes**: Synchronous and Asynchronous
-- 🔒 **Concurrency control** using async semaphore (max 3 concurrent scans)
+- 🔢 **Concurrency control** using async semaphore (max 3 concurrent scans)
 - ❌ **Input validation** (rejects invalid or unsupported options)
 - ⚙️ **Easy to extend** with new Nmap flags
 - 🧩 **Integration-ready** for any programming language (JSON-based)
@@ -110,18 +113,20 @@ This API provides the building blocks - **you must add the security layer** appr
 
 ## ✨ Additional Features (`main.py` only)
 
-- 📁 **Automatic file management** with `nmap_scans/` directory
+- 📂 **Automatic file management** with `nmap_scans/` directory
 - 🔐 **Path sanitization** (prevents directory traversal)
 - 🆔 **UUID-based filenames** (prevents conflicts)
 - 🗂️ **Auto-generated XML** for scans without explicit XML output (when using `-oN` or no output option)
 - 📊 **Built-in XML parser** (converts to structured JSON)
 - 📄 **File retrieval endpoint** (`/file`)
+- 🪟 **Windows compatibility** using Hypercorn instead of uvicorn
+- 📝 **Output mode tracking** in scan responses for easier file retrieval
 
 ## 🛠 Requirements
 
 - **Python 3.10+**
 - **Nmap 7.98** or compatible version
-- **Linux / WSL / macOS** (Windows users should use WSL)
+- **Linux / WSL / macOS / Windows** (Windows now fully supported via Hypercorn)
 
 ## 📦 Installation
 
@@ -134,7 +139,7 @@ cd nmap-exec-api
 pip install fastapi uvicorn
 
 # Install additional dependencies (for main.py)
-pip install fastapi uvicorn python-libnmap
+pip install fastapi python-libnmap hypercorn
 
 # Verify Nmap is installed
 nmap --version
@@ -154,6 +159,13 @@ uvicorn nmap-testing:app --host 0.0.0.0 --port 8000 --reload
 # Direct execution (recommended for local testing)
 python main.py
 ```
+
+**Why Hypercorn for main.py?**
+
+The `main.py` implementation uses **Hypercorn** instead of uvicorn because:
+- ✅ **Windows compatibility**: uvicorn uses `SelectorEventLoop` on Windows, which causes issues with subprocess execution
+- ✅ **Better async support**: Hypercorn properly handles ProactorEventLoop on Windows
+- ✅ **Reliable subprocess management**: Ensures Nmap scans execute correctly across all platforms
 
 The API will be available at:
 - Developer version: `http://0.0.0.0:8000`
@@ -194,9 +206,15 @@ Execute an Nmap scan and wait for completion (best for quick scans).
   "message": "Nmap scan completed successfully",
   "output_file": "/absolute/path/nmap_scans/result_a1b2c3d4.txt",
   "output": "Starting Nmap 7.98...",
+  "output_mode": 1,
   "auto_xml": "/absolute/path/nmap_scans/auto_e5f6g7h8.xml"
 }
 ```
+
+**Note:** The `output_mode` field indicates the type of output format:
+- `1` - Normal text output (`-oN`)
+- `2` - XML output (`-oX`)
+- `3` - All formats (`-oA`)
 
 ### 2. `POST /scan/async` - Asynchronous Scan
 
@@ -237,11 +255,12 @@ Start a scan and get a job ID immediately (best for long-running scans).
   "message": "Nmap scan completed successfully",
   "output_file": "/path/to/scan.txt",
   "output": "Nmap scan report...",
+  "output_mode": 1,
   "auto_xml": "/path/to/auto.xml"
 }
 ```
 
-**Note:** `auto_xml` is only present if you used `-oN` or no output option. It won't be present for `-oX` or `-oA` scans.
+**Note:** `auto_xml` is only present if you used `-oN` or no output option. It won't be present for `-oX` or `-oA` scans. The `output_mode` field helps you determine which file retrieval mode to use.
 
 **Response (Failed):**
 ```json
@@ -267,9 +286,11 @@ GET /file?output_file=/absolute/path/nmap_scans/scan_abc123.txt&output_mode=1
 **Query Parameters:**
 - `output_file` - **Exact path from scan response** (from `output_file` or `auto_xml` fields)
 - `output_mode`:
-  - `1` - Normal text output (provide path ending with `.nmap`)
+  - `1` - Normal text output (provide path ending with `.nmap` or `.txt`)
   - `2` - Parse XML and return structured JSON (provide path ending with `.xml` or use `auto_xml` from response)
   - `3` - Parse `-oA` output (**must provide base path without extension**, as returned in scan response)
+
+**Pro Tip:** Use the `output_mode` field from the scan response to know which mode to use with the `/file` endpoint!
 
 **Usage Notes:**
 - **Mode 2**: If your scan didn't specify XML output (used `-oN` or no output option), an `auto_xml` file is created automatically. Use this path with mode 2 for parsing.
@@ -316,18 +337,29 @@ GET /file?output_file=/absolute/path/nmap_scans/scan_abc123.txt&output_mode=1
 **Common Usage Patterns:**
 
 ```bash
-# 1. Scans WITHOUT XML option (auto_xml is created)
+# 1. Scans WITHOUT XML option (auto_xml is created, output_mode=1)
 # Examples: No output option, or -oN used
-# Scan response: {"auto_xml": "/path/auto_abc123.xml", ...}
+# Scan response: {"auto_xml": "/path/auto_abc123.xml", "output_mode": 1, ...}
 curl "http://localhost:8000/file?output_file=/path/auto_abc123.xml&output_mode=2"
 
-# 2. Scans WITH -oX option (auto_xml NOT created)
-# Scan response: {"output_file": "/path/scan_xyz.xml", ...}
+# 2. Scans WITH -oX option (auto_xml NOT created, output_mode=2)
+# Scan response: {"output_file": "/path/scan_xyz.xml", "output_mode": 2, ...}
 curl "http://localhost:8000/file?output_file=/path/scan_xyz.xml&output_mode=2"
 
-# 3. Scans WITH -oA option (auto_xml NOT created, use mode 3)
-# Scan response: {"output_file": "/path/scan_base", ...}
+# 3. Scans WITH -oA option (auto_xml NOT created, output_mode=3)
+# Scan response: {"output_file": "/path/scan_base", "output_mode": 3, ...}
 curl "http://localhost:8000/file?output_file=/path/scan_base&output_mode=3"
+```
+
+### 5. `GET /alive` - Health Check
+
+Simple endpoint to verify the API is running.
+
+**Response:**
+```json
+{
+  "status": "alive"
+}
 ```
 
 ## 🧩 Option Model
@@ -486,6 +518,7 @@ curl -X POST "http://localhost:8000/scan" \
 # {
 #   "message": "Nmap scan completed successfully",
 #   "output_file": "",
+#   "output_mode": null,
 #   "auto_xml": "/path/nmap_scans/auto_xyz789.xml"  ← Created automatically
 # }
 
@@ -494,7 +527,7 @@ curl "http://localhost:8000/file?output_file=/path/nmap_scans/auto_xyz789.xml&ou
 
 # =====================================
 
-# Scenario 2: Scan WITH -oN (auto_xml IS created)
+# Scenario 2: Scan WITH -oN (auto_xml IS created, output_mode=1)
 curl -X POST "http://localhost:8000/scan" \
   -H "Content-Type: application/json" \
   -d '{
@@ -508,6 +541,7 @@ curl -X POST "http://localhost:8000/scan" \
 # Response:
 # {
 #   "output_file": "/path/nmap_scans/scan_abc123.txt",
+#   "output_mode": 1,  ← Indicates -oN format
 #   "auto_xml": "/path/nmap_scans/auto_def456.xml"  ← Created automatically
 # }
 
@@ -516,7 +550,7 @@ curl "http://localhost:8000/file?output_file=/path/nmap_scans/auto_def456.xml&ou
 
 # =====================================
 
-# Scenario 3: Scan WITH -oA (auto_xml NOT created)
+# Scenario 3: Scan WITH -oA (auto_xml NOT created, output_mode=3)
 curl -X POST "http://localhost:8000/scan" \
   -H "Content-Type: application/json" \
   -d '{
@@ -529,7 +563,8 @@ curl -X POST "http://localhost:8000/scan" \
 
 # Response:
 # {
-#   "output_file": "/path/nmap_scans/network_scan_abc123"
+#   "output_file": "/path/nmap_scans/network_scan_abc123",
+#   "output_mode": 3  ← Indicates -oA format, use mode 3 for retrieval
 #   # Note: NO auto_xml field - not needed since -oA creates XML
 # }
 
@@ -541,6 +576,7 @@ curl "http://localhost:8000/file?output_file=/path/nmap_scans/network_scan_abc12
 # ❌ auto_xml NOT created: -oX or -oA used (they already create XML)
 # ✅ Mode 2 usage:         Use auto_xml path or explicit XML path
 # ✅ Mode 3 usage:         Use base path from -oA (without .xml)
+# ✅ Use output_mode:      From scan response to determine correct retrieval mode
 ```
 
 ### Example 4: JavaScript Client
@@ -573,23 +609,16 @@ async function runAsyncScan() {
       console.log('Scan completed!', status);
       clearInterval(interval);
       
-      // Parse results based on available outputs
-      if (status.auto_xml) {
-        // Use auto_xml with mode 2
-        const fileResp = await fetch(
-          `http://localhost:8000/file?output_file=${status.auto_xml}&output_mode=2`
-        );
-        const parsedData = await fileResp.json();
-        console.log('Parsed auto_xml results:', parsedData.data);
-      }
+      // Use output_mode from response to determine how to retrieve file
+      const outputMode = status.output_mode || 2; // Default to XML parsing
+      const filePath = status.auto_xml || status.output_file;
       
-      // If -oA was used, parse using mode 3
-      if (status.output_file && usedOaOption) {
+      if (filePath) {
         const fileResp = await fetch(
-          `http://localhost:8000/file?output_file=${status.output_file}&output_mode=3`
+          `http://localhost:8000/file?output_file=${filePath}&output_mode=${outputMode}`
         );
         const parsedData = await fileResp.json();
-        console.log('Parsed -oA results:', parsedData.data);
+        console.log('Parsed results:', parsedData);
       }
     } else if (status.error) {
       console.error('Scan failed:', status);
@@ -600,26 +629,33 @@ async function runAsyncScan() {
   const interval = setInterval(checkStatus, 5000);
 }
 
-// Example: Using auto_xml for parsing (mode 2)
-async function parseAutoXml(auto_xml_path) {
+// Example: Using output_mode for intelligent retrieval
+async function retrieveScanResults(scanResponse) {
+  const mode = scanResponse.output_mode;
+  const path = scanResponse.auto_xml || scanResponse.output_file;
+  
+  if (!path) {
+    console.log('No output file available');
+    return;
+  }
+  
+  // Use mode from scan response (or default to 2 for XML parsing)
+  const retrievalMode = mode || 2;
+  
   const fileResp = await fetch(
-    `http://localhost:8000/file?output_file=${auto_xml_path}&output_mode=2`
+    `http://localhost:8000/file?output_file=${path}&output_mode=${retrievalMode}`
   );
-  const parsedData = await fileResp.json();
-  console.log('Parsed auto_xml:', parsedData.data);
-}
-
-// Example: Using -oA output for parsing (mode 3)
-async function parseOaOutput(base_path) {
-  const fileResp = await fetch(
-    `http://localhost:8000/file?output_file=${base_path}&output_mode=3`
-  );
-  const parsedData = await fileResp.json();
-  console.log('Parsed -oA output:', parsedData.data);
+  const data = await fileResp.json();
+  
+  if (data.output_mode === 'xml') {
+    console.log('Parsed hosts:', data.data);
+  } else {
+    console.log('Raw output:', data.content);
+  }
 }
 ```
 
-## 🔐 Security Features (`main.py`)
+## 🔧 Security Features (`main.py`)
 
 ### 1. Path Sanitization
 ```python
@@ -665,6 +701,24 @@ if not has_xml:
 
 This ensures parsed data is always available, even when users only request text output or no output at all.
 
+### 4. Windows Compatibility (Hypercorn)
+```python
+# Uses Hypercorn instead of uvicorn for Windows compatibility
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
+
+if __name__ == "__main__":
+    config = Config()
+    config.bind = ["127.0.0.1:8000"]
+    config.use_reloader = True
+    asyncio.run(serve(app, config))
+```
+
+**Why this matters:**
+- ✅ **Fixes Windows subprocess issues**: uvicorn's SelectorEventLoop doesn't properly handle subprocess execution on Windows
+- ✅ **Better async compatibility**: Hypercorn uses ProactorEventLoop on Windows
+- ✅ **Reliable scanning**: Ensures Nmap scans complete successfully across all platforms
+
 ## 🚀 Quick Start Guide
 
 ### For Developers (nmap-testing.py)
@@ -676,11 +730,12 @@ This ensures parsed data is always available, even when users only request text 
 
 ### For Quick Testing (main.py)
 
-1. Clone and install dependencies (including `python-libnmap`)
+1. Clone and install dependencies (including `python-libnmap` and `hypercorn`)
 2. Run `python main.py`
 3. Use Postman/curl to test on localhost (127.0.0.1:8000)
 4. Check `nmap_scans/` folder for results
 5. **Note:** This is for local testing only, not production deployment
+6. **Windows users:** Hypercorn ensures proper subprocess handling!
 
 ## 🧩 Extending the API
 
@@ -708,10 +763,14 @@ No API endpoint changes needed!
 | **File conflicts** | Checks existence | UUID prevents conflicts |
 | **XML parsing** | No | Yes (`/file` endpoint) |
 | **Auto XML** | No | Yes (always generated) |
-| **Dependencies** | Minimal | Includes `python-libnmap` |
+| **Output mode** | No | Yes (tracked in response) |
+| **Server** | uvicorn | Hypercorn |
+| **Windows support** | May have issues | ✅ Full support |
+| **Dependencies** | Minimal | Includes `python-libnmap`, `hypercorn` |
 | **Target users** | Developers | Testers/Local use |
 | **Customization** | Easy | Not needed |
 | **Deployment** | Add auth & deploy | localhost:8000 only |
+
 
 ## 🤝 Contributing
 
