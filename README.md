@@ -15,6 +15,14 @@ This project is **specifically designed as a building block for developers** who
 
 Instead of dealing with shell commands, subprocess management, and security concerns, developers can simply send JSON requests to this API.
 
+## TL;DR
+
+- This is a FastAPI wrapper around Nmap using structured option IDs
+- Designed for **authorized scanning only**
+- `nmap-testing.py` → developer boilerplate
+- `main.py` → localhost testing tool (NOT production)
+- Always add authentication, target validation, and rate limiting before deployment
+
 ## 📁 Project Structure
 
 This repository contains two implementations:
@@ -121,6 +129,30 @@ This API provides the building blocks - **you must add the security layer** appr
 - 📄 **File retrieval endpoint** (`/file`)
 - 🪟 **Windows compatibility** using Hypercorn instead of uvicorn
 - 📝 **Output mode tracking** in scan responses for easier file retrieval
+
+## 🔎 Windows & Platform Disclaimer
+
+**Platform support clarification**
+
+The features listed above indicate **application-level compatibility** of `main.py`, not a guarantee of identical Nmap behavior across operating systems.
+
+- ✅ This API **runs on Windows**, including proper subprocess handling, via **Hypercorn**
+- ⚠️ **Nmap itself behaves differently on Windows vs Linux**
+- ⚠️ Some scan types (e.g. SYN scans, OS detection, raw socket operations) may:
+  - Require **administrator privileges**
+  - Be **restricted or emulated** on Windows
+  - Produce **different results** compared to Linux
+
+This project **does not bypass Nmap privilege requirements**, elevate permissions, or normalize OS-specific scan behavior.
+
+**Hypercorn** is used specifically to ensure the FastAPI application works correctly on Windows, where **uvicorn’s default event loop may fail to execute subprocess-based tools reliably**.
+
+For **maximum Nmap capability, accuracy, and consistency**, **Linux or WSL is strongly recommended**.
+
+**In short:**
+- ✔️ This application supports Windows
+- ❌ This does *not* mean Nmap has full or identical feature support on Windows
+
 
 ## 🛠 Requirements
 
