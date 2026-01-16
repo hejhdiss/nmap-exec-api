@@ -23,6 +23,111 @@ Instead of dealing with shell commands, subprocess management, and security conc
 - `main.py` → localhost testing tool (NOT production)
 - Always add authentication, target validation, and rate limiting before deployment
 
+---
+
+## 🖥️ Desktop App (UI + Server Demo)
+
+**Experimental / Demonstration Release**
+
+A desktop UI demonstration of this project is available via GitHub Releases:
+
+🔗 **Download:** https://github.com/hejhdiss/nmap-exec-api/releases/tag/v0.0.0
+
+### What this release contains
+
+This release includes two executable files:
+
+- `server.exe` → runs the FastAPI-based Nmap execution backend
+- `ui.exe` → a React + Vite desktop UI that connects to the local server
+
+### How it works
+
+1. Run `server.exe`
+2. Then run `ui.exe`
+3. The UI connects to the local server and provides a polished graphical interface for Nmap
+
+This setup demonstrates how the API in this repository can be used to build a real desktop application, not just a web or CLI tool.
+
+### 🔒 Localhost-only networking (important)
+
+- Both the server and UI run strictly on loopback
+- No outbound network connections are made by the application itself
+- Nothing is exposed to your LAN or the internet by default
+
+**Ports used:**
+
+- Server: `127.0.0.1:8000`
+- UI: `127.0.0.1:4565`
+
+The UI communicates only with the local server over `localhost`, making this a self-contained local desktop setup.
+
+### Important notes (read this)
+
+- ❗ This is NOT an advanced or hardened security product
+- ❗ This does NOT make Nmap more secure
+- ❗ This is NOT a Zenmap replacement
+
+**Instead, this demo focuses on:**
+
+- ✔ Clean, modern UI
+- ✔ Clear scan workflows
+- ✔ Better usability for everyday Nmap users
+- ✔ A design that treats Nmap as a first-class tool, not a hidden backend
+
+Think of it as a highly polished UI layer over real Nmap, designed the way such a tool should feel.
+
+### Who this is for
+
+#### 🧑‍💻 Nmap users
+
+If you regularly use Nmap and want:
+
+- A cleaner interface
+- Easier scan composition
+- Better visibility into results
+
+…this UI demo may genuinely help your workflow.
+
+#### 🧠 Developers
+
+If you are a developer, this release shows:
+
+- How this API can be turned into a desktop application
+- How a React + Vite UI can sit cleanly on top of the backend
+- How this project can be expanded into a much larger application
+
+**You are encouraged to:**
+
+- Fork it
+- Extend it
+- Repackage it
+- Build something bigger on top of it
+
+### Platform note
+
+- The provided binaries are Windows `.exe` files, because the author currently uses Windows
+- The architecture is cross-platform
+- You can compile and package this project for other environments such as Linux (AppImage / `.deb`) or macOS
+
+The release exists to demonstrate the implementation, not to limit platforms.
+
+### Licensing
+
+This UI + server demo, like the rest of the project, is released under the **Apache License 2.0**.
+
+**You are free to:**
+
+- Modify it
+- Redistribute it
+- Use it commercially
+- Build proprietary software on top of it
+
+### Credits(ui.exe)
+
+This desktop UI was created with the help of Lovable AI.
+
+---
+
 ## 📁 Project Structure
 
 This repository contains two implementations:
