@@ -1,0 +1,183 @@
+/* Nmap Scanner Main Styles */
+
+.nmap-scanner {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  padding: 0;
+}
+
+/* Header */
+.nmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(220 70% 20%) 100%);
+  color: hsl(var(--primary-foreground));
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.nmap-header-content {
+  flex: 1;
+}
+
+.nmap-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 4px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.nmap-logo {
+  font-size: 1.5rem;
+}
+
+.nmap-subtitle {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
+.nmap-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Content Layout */
+.nmap-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .nmap-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .nmap-content {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .nmap-header {
+    padding: 16px;
+  }
+  
+  .nmap-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Config Column */
+.nmap-config {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Results Column */
+.nmap-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Target Input */
+.target-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.target-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Scan Mode */
+.scan-mode-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scan-mode-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Scan Actions */
+.scan-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: hsl(var(--muted) / 0.2);
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+}
+
+.scan-actions .nmap-button {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-state-title {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.empty-state-text {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  max-width: 300px;
+}
+
+/* Scrollbar Styling */
+.nmap-scanner ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.nmap-scanner ::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 4px;
+}
+
+.nmap-scanner ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+.nmap-scanner ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
