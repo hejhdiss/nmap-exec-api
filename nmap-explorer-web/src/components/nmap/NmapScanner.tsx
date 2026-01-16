@@ -146,7 +146,6 @@ export function NmapScanner() {
     // Check if any option that needs input is missing value
     for (const opt of selectedOptions) {
       if (!opt.value || opt.value.trim().length === 0) {
-      return `One of your selected options requires an input value. Please enter at least one character.`;
       }
     }
     
