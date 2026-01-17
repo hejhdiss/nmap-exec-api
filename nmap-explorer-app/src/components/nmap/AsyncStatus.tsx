@@ -67,9 +67,6 @@ export function AsyncStatus({ jobId, isPolling, pollCount, onStop }: AsyncStatus
                 </p>
               </div>
               
-              <Button variant="danger" size="sm" onClick={onStop}>
-                ⏹️ Stop Polling
-              </Button>
             </>
           )}
         </div>

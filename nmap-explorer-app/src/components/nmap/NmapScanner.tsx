@@ -224,7 +224,7 @@ export function NmapScanner() {
         <div className="nmap-header-content">
           <h1 className="nmap-title">
             <span className="nmap-logo">🔍</span>
-            Nmap Scanner
+            Nmap Explorer
           </h1>
           <p className="nmap-subtitle">Network exploration and security auditing tool</p>
         </div>
