@@ -1,3 +1,4 @@
+from sys import stderr
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Literal
@@ -87,6 +88,9 @@ def run_nuclei(job_id: str, cmd: list):
 
         process.wait()
         JOBS[job_id]["status"] = "completed"
+        stderr = process.stderr.read()
+        if stderr:
+            JOBS[job_id]["stderr"] = stderr
 
     except Exception as e:
         JOBS[job_id]["status"] = "failed"
